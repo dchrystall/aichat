@@ -378,7 +378,29 @@ st.markdown("""
     
     /* Hide Streamlit branding and menu */
     .stDeployButton {display: none;}
-    .reportview-container .main .block-container {padding-top: 1rem;}
+    .reportview-container .main .block-container {padding-top: 0.5rem;}
+    
+    /* Ensure input area is always visible */
+    .stTextInput, .stButton {
+        position: relative !important;
+        z-index: 1000 !important;
+    }
+    
+    /* Mobile viewport fixes */
+    @media (max-width: 768px) {
+        .main .block-container {
+            padding-bottom: 2rem !important;
+        }
+        
+        /* Ensure input stays at bottom */
+        .stTextInput {
+            margin-bottom: 0.5rem !important;
+        }
+        
+        .stButton {
+            margin-bottom: 1rem !important;
+        }
+    }
     
     /* Mobile-specific improvements */
     @media (max-width: 768px) {
@@ -386,23 +408,32 @@ st.markdown("""
             padding-left: 1rem !important;
             padding-right: 1rem !important;
             padding-top: 0.5rem !important;
-            padding-bottom: 1rem !important;
+            padding-bottom: 0.5rem !important;
+            max-height: 100vh !important;
         }
         
         .stButton > button {
             padding: 12px 16px !important;
             font-size: 16px !important;
             min-width: 80px !important;
+            margin-bottom: 1rem !important;
         }
         
         .stTextInput > div > div > input {
             padding: 12px 16px !important;
             font-size: 16px !important;
+            margin-bottom: 0.5rem !important;
         }
         
         /* Ensure input area doesn't get cut off */
         .stTextInput, .stButton {
-            margin-bottom: 1rem !important;
+            margin-bottom: 0.5rem !important;
+        }
+        
+        /* Reduce chat container height on mobile */
+        .chat-container {
+            max-height: 60vh !important;
+            overflow-y: auto !important;
         }
     }
     
@@ -410,17 +441,25 @@ st.markdown("""
         .main .block-container {
             padding-left: 0.5rem !important;
             padding-right: 0.5rem !important;
+            padding-bottom: 0.25rem !important;
         }
         
         .stButton > button {
             padding: 10px 14px !important;
             font-size: 14px !important;
             min-width: 70px !important;
+            margin-bottom: 0.5rem !important;
         }
         
         .stTextInput > div > div > input {
             padding: 10px 14px !important;
             font-size: 16px !important;
+            margin-bottom: 0.25rem !important;
+        }
+        
+        /* Even smaller chat container on phones */
+        .chat-container {
+            max-height: 50vh !important;
         }
     }
 </style>
@@ -506,14 +545,11 @@ def main():
     st.markdown("""
     <div class="header">
         <h1>💕 GirlChat - Vesper</h1>
-        <div style="margin-top: 10px; font-size: 18px; color: rgba(255, 255, 255, 0.8); font-weight: 400;">
+        <div style="margin-top: 5px; font-size: 16px; color: rgba(255, 255, 255, 0.8); font-weight: 400;">
             Your seductive AI companion awaits...
         </div>
     </div>
     """, unsafe_allow_html=True)
-    
-    # Add some spacing for mobile
-    st.markdown("<br>", unsafe_allow_html=True)
     
     # API Key input in sidebar
     with st.sidebar:
@@ -547,38 +583,41 @@ def main():
     # Initialize chat
     initialize_chat()
     
-    # Display chat messages
-    chat_container = st.container()
+    # Display chat messages in a scrollable container
+    st.markdown("""
+    <div style="max-height: 60vh; overflow-y: auto; margin-bottom: 1rem;">
+    """, unsafe_allow_html=True)
     
-    with chat_container:
-        for i, message in enumerate(st.session_state.messages[1:]):  # Skip system message
-            if message["role"] == "user":
+    for i, message in enumerate(st.session_state.messages[1:]):  # Skip system message
+        if message["role"] == "user":
+            st.markdown(f"""
+            <div class="chat-message user-message">
+                {message["content"]}
+            </div>
+            """, unsafe_allow_html=True)
+        elif message["role"] == "assistant":
+            # Check if this is the latest AI message (for typing animation)
+            is_latest_ai = (i == len(st.session_state.messages[1:]) - 1 and 
+                           message["role"] == "assistant" and 
+                           st.session_state.get('show_typing', False))
+            
+            if is_latest_ai:
+                # Show typing animation for the latest message
+                placeholder = st.empty()
+                type_message(message["content"], placeholder)
+                st.session_state.show_typing = False
+            else:
+                # Show completed message
                 st.markdown(f"""
-                <div class="chat-message user-message">
+                <div class="chat-message ai-message">
                     {message["content"]}
                 </div>
                 """, unsafe_allow_html=True)
-            elif message["role"] == "assistant":
-                # Check if this is the latest AI message (for typing animation)
-                is_latest_ai = (i == len(st.session_state.messages[1:]) - 1 and 
-                               message["role"] == "assistant" and 
-                               st.session_state.get('show_typing', False))
-                
-                if is_latest_ai:
-                    # Show typing animation for the latest message
-                    placeholder = st.empty()
-                    type_message(message["content"], placeholder)
-                    st.session_state.show_typing = False
-                else:
-                    # Show completed message
-                    st.markdown(f"""
-                    <div class="chat-message ai-message">
-                        {message["content"]}
-                    </div>
-                    """, unsafe_allow_html=True)
     
-    # Input area
-    st.markdown("---")
+    st.markdown("</div>", unsafe_allow_html=True)
+    
+    # Input area - compact for mobile
+    st.markdown("<div style='margin-top: 1rem;'>", unsafe_allow_html=True)
     
     # Mobile-friendly input layout
     if st.session_state.api_key:
@@ -599,6 +638,8 @@ def main():
         st.info("Please enter your API key in the sidebar to start chatting")
         user_input = ""
         send_button = False
+    
+    st.markdown("</div>", unsafe_allow_html=True)
     
     # Handle user input
     if send_button and user_input.strip() and st.session_state.api_key:
