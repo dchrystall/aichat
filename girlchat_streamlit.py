@@ -723,34 +723,6 @@ def main():
     
     # Mobile-friendly input layout
     if st.session_state.api_key:
-        # Photo upload section
-        st.markdown("### 📸 Photo Analysis")
-        uploaded_file = st.file_uploader(
-            "Upload a photo for me to analyze",
-            type=['png', 'jpg', 'jpeg'],
-            help="Upload an image and I'll analyze it for you!"
-        )
-        
-        # Display uploaded image if any
-        if uploaded_file is not None:
-            st.image(uploaded_file, caption="Uploaded Image", use_container_width=True)
-            
-            # Convert image to base64
-            image_bytes = uploaded_file.read()
-            image_base64 = base64.b64encode(image_bytes).decode('utf-8')
-            
-            # Add photo analysis button
-            analyze_photo = st.button(
-                "🔍 Analyze Photo",
-                use_container_width=True,
-                help="Click to have me analyze this photo"
-            )
-        else:
-            image_base64 = None
-            analyze_photo = False
-        
-        st.markdown("---")
-        
         # Text input
         user_input = st.text_input(
             "Type your message...",
@@ -765,38 +737,34 @@ def main():
             disabled=not st.session_state.api_key or not user_input.strip(),
             use_container_width=True
         )
+        
+        # Photo upload section - below send button
+        st.markdown("### 📸 Photo Upload")
+        uploaded_file = st.file_uploader(
+            "Upload a photo (optional)",
+            type=['png', 'jpg', 'jpeg'],
+            help="Upload an image and mention it in your message for analysis!"
+        )
+        
+        # Display uploaded image if any
+        if uploaded_file is not None:
+            st.image(uploaded_file, caption="Uploaded Image", use_container_width=True)
+            
+            # Convert image to base64
+            image_bytes = uploaded_file.read()
+            image_base64 = base64.b64encode(image_bytes).decode('utf-8')
+        else:
+            image_base64 = None
     else:
         st.info("Please enter your API key in the sidebar to start chatting")
         user_input = ""
         send_button = False
         image_base64 = None
-        analyze_photo = False
     
     st.markdown("</div>", unsafe_allow_html=True)
     
-    # Handle photo analysis
-    if analyze_photo and image_base64 and st.session_state.api_key:
-        # Add user message about photo analysis
-        photo_message = user_input.strip() if user_input.strip() else "Can you analyze this photo for me?"
-        st.session_state.messages.append({"role": "user", "content": photo_message})
-        
-        # Get AI response with image
-        ai_response = get_ai_response(st.session_state.messages, st.session_state.api_key, image_base64)
-        
-        if ai_response:
-            # Add AI response to messages
-            st.session_state.messages.append({"role": "assistant", "content": ai_response})
-            
-            # Set flag to show typing animation
-            st.session_state.show_typing = True
-            
-            # Clear input and rerun
-            st.rerun()
-        else:
-            st.error("Sorry, I had trouble analyzing the photo. Please check your API key and try again!")
-    
-    # Handle regular text input
-    elif send_button and user_input.strip() and st.session_state.api_key:
+    # Handle user input (with optional photo analysis)
+    if send_button and user_input.strip() and st.session_state.api_key:
         # Add user message
         st.session_state.messages.append({"role": "user", "content": user_input})
         
@@ -807,8 +775,8 @@ def main():
             if len(potential_name) <= 20 and not any(word in potential_name.lower() for word in ['what', 'how', 'why', 'when', 'where', 'who', '?']):
                 st.session_state.user_name = potential_name
         
-        # Get AI response first
-        ai_response = get_ai_response(st.session_state.messages, st.session_state.api_key)
+        # Get AI response (with image if uploaded)
+        ai_response = get_ai_response(st.session_state.messages, st.session_state.api_key, image_base64)
         
         if ai_response:
             # Add AI response to messages
