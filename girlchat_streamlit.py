@@ -500,6 +500,8 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 if "api_key" not in st.session_state:
     st.session_state.api_key = None
+if "user_name" not in st.session_state:
+    st.session_state.user_name = None
 
 # Try to get API key from environment variable or Streamlit secrets
 DEFAULT_API_KEY = os.getenv('ANT_KEY', '') or st.secrets.get('ANT_KEY', '')
@@ -510,9 +512,15 @@ SYSTEM_PROMPT = ACTIVE_PROMPT
 def initialize_chat():
     """Initialize the chat with system message and welcome"""
     if not st.session_state.messages:
+        # Check if we have a stored name
+        if st.session_state.user_name:
+            welcome_message = f"Hey {st.session_state.user_name}! 💕 I'm so happy to chat with you again! What's on your mind?"
+        else:
+            welcome_message = "Hey there! 💕 I'm so happy to chat with you! What's your name, sweetheart?"
+        
         st.session_state.messages = [
             {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "assistant", "content": "Hey there! 💕 I'm so happy to chat with you! What's on your mind?"}
+            {"role": "assistant", "content": welcome_message}
         ]
         # Set flag to show typing animation for welcome message
         st.session_state.show_typing = True
@@ -611,6 +619,19 @@ def main():
         
         st.markdown("---")
         
+        # User name section
+        st.markdown("### 👤 User Info")
+        if st.session_state.user_name:
+            st.success(f"**Name:** {st.session_state.user_name}")
+            if st.button("Change Name"):
+                st.session_state.user_name = None
+                st.session_state.messages = []
+                st.rerun()
+        else:
+            st.info("Name not set yet")
+        
+        st.markdown("---")
+        
         # Debug toggle
         debug_mode = st.checkbox("Debug Mode", value=False)
         st.session_state.debug = debug_mode
@@ -680,6 +701,13 @@ def main():
     if send_button and user_input.strip() and st.session_state.api_key:
         # Add user message
         st.session_state.messages.append({"role": "user", "content": user_input})
+        
+        # Check if this might be a name (first message and no name stored yet)
+        if not st.session_state.user_name and len(st.session_state.messages) <= 3:
+            # Simple name detection - if it's a short response and doesn't look like a question
+            potential_name = user_input.strip()
+            if len(potential_name) <= 20 and not any(word in potential_name.lower() for word in ['what', 'how', 'why', 'when', 'where', 'who', '?']):
+                st.session_state.user_name = potential_name
         
         # Get AI response first
         ai_response = get_ai_response(st.session_state.messages, st.session_state.api_key)

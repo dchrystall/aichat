@@ -225,6 +225,10 @@
 <body>
     <div class="header">
         <h1>💕 GirlChat</h1>
+        <div id="nameDisplay" style="margin-top: 5px; font-size: 14px; color: rgba(255, 255, 255, 0.8);">
+            <span id="userNameText"></span>
+            <button id="changeNameBtn" onclick="changeName()" style="display: none; margin-left: 10px; background: rgba(255, 255, 255, 0.2); border: none; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; cursor: pointer;">Change</button>
+        </div>
     </div>
     
     <div class="chat-container">
@@ -239,6 +243,7 @@
     <script>
         // API key will be set via environment variable or user input
         let API_KEY = "";
+        let USER_NAME = localStorage.getItem('user_name') || null;
         
         // Function to get API key from user
         function getAPIKey() {
@@ -255,6 +260,39 @@
                 return true;
             }
             return false;
+        }
+        
+        // Function to store user name
+        function storeUserName(name) {
+            USER_NAME = name;
+            localStorage.setItem('user_name', name);
+            updateNameDisplay();
+        }
+        
+        // Function to update name display
+        function updateNameDisplay() {
+            const nameText = document.getElementById('userNameText');
+            const changeBtn = document.getElementById('changeNameBtn');
+            
+            if (USER_NAME) {
+                nameText.textContent = `👤 ${USER_NAME}`;
+                changeBtn.style.display = 'inline-block';
+            } else {
+                nameText.textContent = '';
+                changeBtn.style.display = 'none';
+            }
+        }
+        
+        // Function to change name
+        function changeName() {
+            const newName = prompt("Enter your name:");
+            if (newName && newName.trim()) {
+                storeUserName(newName.trim());
+                // Clear chat and restart
+                messages = [{ role: "system", content: SYSTEM_PROMPT }];
+                chatbox.innerHTML = '';
+                initializeApp();
+            }
         }
         let SYSTEM_PROMPT = "";
         
@@ -283,11 +321,21 @@
         async function initializeApp() {
             await loadPrompt();
             
+            // Update name display
+            updateNameDisplay();
+            
             // Check for API key and initialize
             if (getAPIKey()) {
-                // Add welcome message
-                const welcomeDiv = addMessage("assistant", "Hey there! 💕 I'm so happy to chat with you! What's on your mind?");
-                typeMessage(welcomeDiv, "Hey there! 💕 I'm so happy to chat with you! What's on your mind?");
+                // Add welcome message based on whether we have a stored name
+                let welcomeMessage;
+                if (USER_NAME) {
+                    welcomeMessage = `Hey ${USER_NAME}! 💕 I'm so happy to chat with you again! What's on your mind?`;
+                } else {
+                    welcomeMessage = "Hey there! 💕 I'm so happy to chat with you! What's your name, sweetheart?";
+                }
+                
+                const welcomeDiv = addMessage("assistant", welcomeMessage);
+                typeMessage(welcomeDiv, welcomeMessage);
             } else {
                 // Show error if no API key provided
                 const errorDiv = document.createElement('div');
@@ -351,6 +399,15 @@
             // Disable input and button
             input.disabled = true;
             sendBtn.disabled = true;
+            
+            // Check if this might be a name (first message and no name stored yet)
+            if (!USER_NAME && messages.length <= 3) {
+                // Simple name detection - if it's a short response and doesn't look like a question
+                const potentialName = userMessage.trim();
+                if (potentialName.length <= 20 && !['what', 'how', 'why', 'when', 'where', 'who', '?'].some(word => potentialName.toLowerCase().includes(word))) {
+                    storeUserName(potentialName);
+                }
+            }
             
             // Add user message
             addMessage("user", userMessage);
