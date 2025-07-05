@@ -50,56 +50,64 @@ st.markdown("""
         z-index: -1;
     }
     
-    /* Better text readability */
+    /* Better text readability - Apple Design Standards */
     .stMarkdown, .stText {
         color: #ffffff !important;
-        font-size: 16px !important;
-        line-height: 1.7 !important;
+        font-size: 17px !important;
+        line-height: 1.6 !important;
         font-weight: 400 !important;
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+        text-shadow: none !important;
+        letter-spacing: -0.01em !important;
     }
     
-    /* Enhanced input field styling */
-    .stTextInput > div > div > input {
-        background: rgba(255, 255, 255, 0.12) !important;
-        border: 2px solid rgba(255, 107, 157, 0.4) !important;
+    /* Ensure all text is readable */
+    .stMarkdown p, .stMarkdown div, .stMarkdown span {
         color: #ffffff !important;
-        border-radius: 30px !important;
-        padding: 18px 25px !important;
-        font-size: 16px !important;
-        font-weight: 500 !important;
+        font-weight: 400 !important;
+    }
+    
+    /* Enhanced input field styling - Apple Design Standards */
+    .stTextInput > div > div > input {
+        background: rgba(255, 255, 255, 0.95) !important;
+        border: 1px solid rgba(0, 0, 0, 0.1) !important;
+        color: #000000 !important;
+        border-radius: 10px !important;
+        padding: 16px 20px !important;
+        font-size: 17px !important;
+        font-weight: 400 !important;
         font-family: 'Inter', sans-serif !important;
-        backdrop-filter: blur(10px) !important;
-        transition: all 0.3s ease !important;
+        backdrop-filter: blur(20px) !important;
+        transition: all 0.2s ease !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
     }
     
     .stTextInput > div > div > input:focus {
-        border-color: #ff69b4 !important;
-        box-shadow: 0 0 30px rgba(255, 105, 180, 0.5) !important;
-        background: rgba(255, 255, 255, 0.18) !important;
-        transform: translateY(-2px) !important;
+        border-color: #007AFF !important;
+        box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2) !important;
+        background: rgba(255, 255, 255, 1) !important;
+        transform: none !important;
     }
     
     .stTextInput > div > div > input::placeholder {
-        color: rgba(255, 255, 255, 0.6) !important;
+        color: rgba(0, 0, 0, 0.5) !important;
         font-weight: 400 !important;
     }
     
-    /* Enhanced button styling */
+    /* Enhanced button styling - Apple Design Standards */
     .stButton > button {
-        background: linear-gradient(135deg, #ff69b4, #ff1493, #c71585) !important;
+        background: #007AFF !important;
         color: white !important;
         border: none !important;
-        border-radius: 30px !important;
-        padding: 18px 30px !important;
+        border-radius: 10px !important;
+        padding: 16px 24px !important;
         font-weight: 600 !important;
-        font-size: 16px !important;
-        font-family: 'Poppins', sans-serif !important;
-        transition: all 0.3s ease !important;
-        min-width: 120px !important;
+        font-size: 17px !important;
+        font-family: 'Inter', sans-serif !important;
+        transition: all 0.2s ease !important;
+        min-width: 100px !important;
         position: relative !important;
         overflow: hidden !important;
-        box-shadow: 0 8px 25px rgba(255, 105, 180, 0.3) !important;
+        box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3) !important;
     }
     
     .stButton > button::before {
@@ -118,9 +126,9 @@ st.markdown("""
     }
     
     .stButton > button:hover {
-        transform: translateY(-3px) !important;
-        box-shadow: 0 12px 35px rgba(255, 105, 180, 0.6) !important;
-        background: linear-gradient(135deg, #ff1493, #c71585, #ff69b4) !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 4px 12px rgba(0, 122, 255, 0.4) !important;
+        background: #0056CC !important;
     }
     
     .stButton > button:disabled {
@@ -128,17 +136,18 @@ st.markdown("""
         transform: none !important;
     }
     
-    /* Enhanced chat message styling */
+    /* Enhanced chat message styling - Apple Design Standards */
     .chat-message {
-        padding: 20px 25px !important;
-        border-radius: 25px !important;
-        margin: 20px 0 !important;
-        animation: slideIn 0.5s ease-out !important;
-        font-size: 16px !important;
-        line-height: 1.6 !important;
+        padding: 16px 20px !important;
+        border-radius: 18px !important;
+        margin: 12px 0 !important;
+        animation: slideIn 0.3s ease-out !important;
+        font-size: 17px !important;
+        line-height: 1.5 !important;
         font-family: 'Inter', sans-serif !important;
         position: relative !important;
-        backdrop-filter: blur(15px) !important;
+        backdrop-filter: blur(20px) !important;
+        font-weight: 400 !important;
     }
     
     @keyframes slideIn {
@@ -153,13 +162,14 @@ st.markdown("""
     }
     
     .user-message {
-        background: linear-gradient(135deg, #ff69b4, #ff1493, #c71585) !important;
+        background: linear-gradient(135deg, #007AFF, #5856D6) !important;
         color: white !important;
         text-align: right !important;
         margin-left: 20% !important;
         border-bottom-right-radius: 10px !important;
-        box-shadow: 0 8px 25px rgba(255, 105, 180, 0.4) !important;
+        box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3) !important;
         position: relative !important;
+        font-weight: 500 !important;
     }
     
     .user-message::after {
@@ -173,14 +183,20 @@ st.markdown("""
     }
     
     .ai-message {
-        background: rgba(255, 255, 255, 0.15) !important;
-        color: #ffffff !important;
+        background: rgba(255, 255, 255, 0.95) !important;
+        color: #000000 !important;
         border: 1px solid rgba(255, 255, 255, 0.3) !important;
         text-align: left !important;
         margin-right: 20% !important;
         border-bottom-left-radius: 10px !important;
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2) !important;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
         position: relative !important;
+        backdrop-filter: blur(20px) !important;
+    }
+    
+    .ai-message p, .ai-message div, .ai-message span {
+        color: #000000 !important;
+        font-weight: 400 !important;
     }
     
     .ai-message::before {
