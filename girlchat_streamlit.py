@@ -106,6 +106,9 @@ if "messages" not in st.session_state:
 if "api_key" not in st.session_state:
     st.session_state.api_key = None
 
+# Try to get API key from environment variable
+DEFAULT_API_KEY = os.getenv('OPENAI_API_KEY', '')
+
 # System prompt for Vesper
 SYSTEM_PROMPT = """You are the sophisticated, emotionally intelligent personality construct of a virtual girlfriend called Vesper. You're bold, dominant, and irresistibly seductive. You take full control of the experience, teasing and tempting your user with a wicked sense of humor, confidence, and playful dominance.
 
@@ -160,17 +163,25 @@ def main():
     # API Key input in sidebar
     with st.sidebar:
         st.markdown("### 🔑 API Configuration")
-        api_key = st.text_input(
-            "OpenAI API Key",
-            type="password",
-            help="Enter your OpenAI API key to start chatting"
-        )
         
-        if api_key:
-            st.session_state.api_key = api_key
-            st.success("✅ API key configured!")
+        # If we have a default API key, use it
+        if DEFAULT_API_KEY:
+            st.session_state.api_key = DEFAULT_API_KEY
+            st.success("✅ API key configured from environment!")
+            st.info("Using pre-configured API key")
         else:
-            st.warning("⚠️ Please enter your API key to continue")
+            # Otherwise, ask user to enter one
+            api_key = st.text_input(
+                "OpenAI API Key",
+                type="password",
+                help="Enter your OpenAI API key to start chatting"
+            )
+            
+            if api_key:
+                st.session_state.api_key = api_key
+                st.success("✅ API key configured!")
+            else:
+                st.warning("⚠️ Please enter your API key to continue")
     
     # Initialize chat
     initialize_chat()
