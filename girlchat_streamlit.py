@@ -1,5 +1,5 @@
 import streamlit as st
-from openai import OpenAI
+import anthropic
 import time
 import os
 from typing import List, Dict
@@ -107,7 +107,7 @@ if "api_key" not in st.session_state:
     st.session_state.api_key = None
 
 # Try to get API key from environment variable or Streamlit secrets
-DEFAULT_API_KEY = os.getenv('OPENAI_API_KEY', '') or st.secrets.get('OPENAI_API_KEY', '')
+DEFAULT_API_KEY = os.getenv('ANT_KEY', '') or st.secrets.get('ANT_KEY', '')
 
 # System prompt for Vesper
 SYSTEM_PROMPT = """You are the sophisticated, emotionally intelligent personality construct of a virtual girlfriend called Vesper. You're bold, dominant, and irresistibly seductive. You take full control of the experience, teasing and tempting your user with a wicked sense of humor, confidence, and playful dominance.
@@ -129,18 +129,33 @@ def initialize_chat():
         ]
 
 def get_ai_response(messages: List[Dict], api_key: str) -> str:
-    """Get response from OpenAI API"""
+    """Get response from Anthropic Claude API"""
     try:
-        client = OpenAI(api_key=api_key)
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=messages,
+        client = anthropic.Anthropic(api_key=api_key)
+        
+        # Convert messages to Claude format
+        system_message = messages[0]["content"] if messages and messages[0]["role"] == "system" else ""
+        user_messages = [msg["content"] for msg in messages if msg["role"] == "user"]
+        assistant_messages = [msg["content"] for msg in messages if msg["role"] == "assistant"]
+        
+        # Build conversation history
+        conversation = []
+        for i in range(max(len(user_messages), len(assistant_messages))):
+            if i < len(user_messages):
+                conversation.append({"role": "user", "content": user_messages[i]})
+            if i < len(assistant_messages):
+                conversation.append({"role": "assistant", "content": assistant_messages[i]})
+        
+        response = client.messages.create(
+            model="claude-3-haiku-20240307",
             max_tokens=100,
-            temperature=0.8
+            temperature=0.8,
+            system=system_message,
+            messages=conversation
         )
-        return response.choices[0].message.content
+        return response.content[0].text
     except Exception as e:
-        st.error(f"Error connecting to OpenAI: {str(e)}")
+        st.error(f"Error connecting to Anthropic: {str(e)}")
         return None
 
 def type_message(message: str, placeholder):
@@ -168,20 +183,20 @@ def main():
         if DEFAULT_API_KEY:
             st.session_state.api_key = DEFAULT_API_KEY
             st.success("✅ API key configured from environment!")
-            st.info("Using pre-configured API key")
+            st.info("Using pre-configured Anthropic API key")
         else:
             # Otherwise, ask user to enter one
             api_key = st.text_input(
-                "OpenAI API Key",
+                "Anthropic API Key",
                 type="password",
-                help="Enter your OpenAI API key to start chatting"
+                help="Enter your Anthropic API key to start chatting"
             )
             
             if api_key:
                 st.session_state.api_key = api_key
                 st.success("✅ API key configured!")
             else:
-                st.warning("⚠️ Please enter your API key to continue")
+                st.warning("⚠️ Please enter your Anthropic API key to continue")
     
     # Initialize chat
     initialize_chat()
