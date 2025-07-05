@@ -106,8 +106,8 @@ if "messages" not in st.session_state:
 if "api_key" not in st.session_state:
     st.session_state.api_key = None
 
-# Try to get API key from environment variable
-DEFAULT_API_KEY = os.getenv('OPENAI_API_KEY', '')
+# Try to get API key from environment variable or Streamlit secrets
+DEFAULT_API_KEY = os.getenv('OPENAI_API_KEY', '') or st.secrets.get('OPENAI_API_KEY', '')
 
 # System prompt for Vesper
 SYSTEM_PROMPT = """You are the sophisticated, emotionally intelligent personality construct of a virtual girlfriend called Vesper. You're bold, dominant, and irresistibly seductive. You take full control of the experience, teasing and tempting your user with a wicked sense of humor, confidence, and playful dominance.
