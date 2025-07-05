@@ -42,7 +42,7 @@ You have a subtle sense of humor and can be playful, but you maintain a level of
 Keep your responses intelligent, engaging, and sophisticated while being warm and personable."""
 
 # Current active prompt (change this to switch personalities)
-ACTIVE_PROMPT = VESPER_PROMPT
+ACTIVE_PROMPT = SASSY_GIRLFRIEND_PROMPT
 
 # You can easily switch personalities by changing the line above to:
 # ACTIVE_PROMPT = SWEET_GIRLFRIEND_PROMPT
