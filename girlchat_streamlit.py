@@ -559,9 +559,6 @@ def get_ai_response(messages: List[Dict], api_key: str) -> str:
 
 def type_message(message: str, placeholder):
     """Simulate typing animation with realistic timing"""
-    # Add a 2-3 second pause before starting to type
-    time.sleep(2.5)
-    
     full_message = ""
     for char in message:
         full_message += char

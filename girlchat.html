@@ -321,21 +321,18 @@
         
         function typeMessage(contentDiv, text, speed = 60) {
             return new Promise((resolve) => {
-                // Add 2-3 second pause before starting to type
-                setTimeout(() => {
-                    let index = 0;
-                    const typeChar = () => {
-                        if (index < text.length) {
-                            contentDiv.textContent += text[index];
-                            index++;
-                            chatbox.scrollTop = chatbox.scrollHeight;
-                            setTimeout(typeChar, speed);
-                        } else {
-                            resolve();
-                        }
-                    };
-                    typeChar();
-                }, 2500); // 2.5 second delay before typing starts
+                let index = 0;
+                const typeChar = () => {
+                    if (index < text.length) {
+                        contentDiv.textContent += text[index];
+                        index++;
+                        chatbox.scrollTop = chatbox.scrollHeight;
+                        setTimeout(typeChar, speed);
+                    } else {
+                        resolve();
+                    }
+                };
+                typeChar();
             });
         }
         
