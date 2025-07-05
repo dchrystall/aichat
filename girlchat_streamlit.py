@@ -67,6 +67,25 @@ st.markdown("""
         font-weight: 400 !important;
     }
     
+    /* Override for AI messages specifically */
+    .ai-message .stMarkdown, .ai-message .stText,
+    .ai-message p, .ai-message div, .ai-message span {
+        color: #000000 !important;
+        background: rgba(255, 255, 255, 0.95) !important;
+    }
+    
+    /* Force typing animation text to be black */
+    .stMarkdown:has(.ai-message), .stMarkdown .ai-message {
+        color: #000000 !important;
+    }
+    
+    /* Override any Streamlit text color inheritance */
+    div[data-testid="stMarkdown"] .ai-message,
+    div[data-testid="stMarkdown"] .ai-message * {
+        color: #000000 !important;
+        background: rgba(255, 255, 255, 0.95) !important;
+    }
+    
     /* Enhanced input field styling - Apple Design Standards */
     .stTextInput > div > div > input {
         background: rgba(255, 255, 255, 0.95) !important;
@@ -200,6 +219,17 @@ st.markdown("""
     .ai-message p, .ai-message div, .ai-message span {
         color: #000000 !important;
         font-weight: 400 !important;
+    }
+    
+    /* Force all text in AI messages to be black */
+    .ai-message * {
+        color: #000000 !important;
+    }
+    
+    /* Ensure Streamlit markdown content is visible */
+    .stMarkdown .ai-message, .stMarkdown .ai-message * {
+        color: #000000 !important;
+        background: rgba(255, 255, 255, 0.95) !important;
     }
     
     /* Mobile responsive adjustments */
@@ -535,10 +565,18 @@ def type_message(message: str, placeholder):
     full_message = ""
     for char in message:
         full_message += char
-        placeholder.markdown(full_message + "▌")
+        placeholder.markdown(f"""
+        <div class="chat-message ai-message">
+            {full_message}▌
+        </div>
+        """, unsafe_allow_html=True)
         # Slower typing speed - adjust between 0.05-0.08 for realistic feel
         time.sleep(0.06)
-    placeholder.markdown(full_message)
+    placeholder.markdown(f"""
+    <div class="chat-message ai-message">
+        {full_message}
+    </div>
+    """, unsafe_allow_html=True)
 
 def main():
     # Header with graphics
