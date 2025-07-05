@@ -15,87 +15,155 @@ st.set_page_config(
 # Custom CSS for dark theme and styling
 st.markdown("""
 <style>
+    /* Main background and text */
     .main {
-        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-        color: #e8e8e8;
+        background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+        color: #ffffff;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
     
+    /* Better text readability */
+    .stMarkdown, .stText {
+        color: #ffffff !important;
+        font-size: 16px !important;
+        line-height: 1.6 !important;
+    }
+    
+    /* Input field styling */
     .stTextInput > div > div > input {
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        color: #e8e8e8;
-        border-radius: 25px;
-        padding: 15px 20px;
+        background: rgba(255, 255, 255, 0.15) !important;
+        border: 2px solid rgba(255, 107, 157, 0.3) !important;
+        color: #ffffff !important;
+        border-radius: 25px !important;
+        padding: 15px 20px !important;
+        font-size: 16px !important;
+        font-weight: 500 !important;
     }
     
     .stTextInput > div > div > input:focus {
-        border-color: #ff6b9d;
-        box-shadow: 0 0 20px rgba(255, 107, 157, 0.3);
+        border-color: #ff6b9d !important;
+        box-shadow: 0 0 25px rgba(255, 107, 157, 0.4) !important;
+        background: rgba(255, 255, 255, 0.2) !important;
     }
     
+    .stTextInput > div > div > input::placeholder {
+        color: rgba(255, 255, 255, 0.7) !important;
+    }
+    
+    /* Button styling */
     .stButton > button {
-        background: linear-gradient(135deg, #ff6b9d, #c44569);
-        color: white;
-        border: none;
-        border-radius: 25px;
-        padding: 15px 20px;
-        font-weight: 600;
-        transition: all 0.3s ease;
+        background: linear-gradient(135deg, #ff6b9d, #c44569) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 25px !important;
+        padding: 15px 25px !important;
+        font-weight: 600 !important;
+        font-size: 16px !important;
+        transition: all 0.3s ease !important;
+        min-width: 100px !important;
     }
     
     .stButton > button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(255, 107, 157, 0.4);
+        transform: translateY(-2px) !important;
+        box-shadow: 0 8px 25px rgba(255, 107, 157, 0.5) !important;
     }
     
+    .stButton > button:disabled {
+        opacity: 0.6 !important;
+        transform: none !important;
+    }
+    
+    /* Chat message styling */
     .chat-message {
-        padding: 15px;
-        border-radius: 18px;
-        margin: 10px 0;
-        animation: fadeIn 0.3s ease-in;
+        padding: 18px 20px !important;
+        border-radius: 20px !important;
+        margin: 15px 0 !important;
+        animation: fadeIn 0.4s ease-in !important;
+        font-size: 16px !important;
+        line-height: 1.5 !important;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
     }
     
     .user-message {
-        background: linear-gradient(135deg, #ff6b9d, #c44569);
-        color: white;
-        text-align: right;
-        margin-left: 20%;
+        background: linear-gradient(135deg, #ff6b9d, #c44569) !important;
+        color: white !important;
+        text-align: right !important;
+        margin-left: 25% !important;
+        border-bottom-right-radius: 8px !important;
     }
     
     .ai-message {
-        background: rgba(255, 255, 255, 0.1);
-        color: #e8e8e8;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        text-align: left;
-        margin-right: 20%;
+        background: rgba(255, 255, 255, 0.12) !important;
+        color: #ffffff !important;
+        border: 1px solid rgba(255, 255, 255, 0.25) !important;
+        text-align: left !important;
+        margin-right: 25% !important;
+        border-bottom-left-radius: 8px !important;
+        backdrop-filter: blur(10px) !important;
     }
     
+    /* Animations */
     @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
+        from { opacity: 0; transform: translateY(15px); }
         to { opacity: 1; transform: translateY(0); }
     }
     
-    .typing-indicator {
-        font-style: italic;
-        color: rgba(232, 232, 232, 0.7);
-        padding: 10px;
-    }
-    
+    /* Header styling */
     .header {
-        text-align: center;
-        padding: 20px;
-        background: rgba(0, 0, 0, 0.3);
-        border-radius: 15px;
-        margin-bottom: 20px;
+        text-align: center !important;
+        padding: 25px !important;
+        background: rgba(0, 0, 0, 0.4) !important;
+        border-radius: 20px !important;
+        margin-bottom: 25px !important;
+        backdrop-filter: blur(15px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
     }
     
     .header h1 {
-        background: linear-gradient(45deg, #ff6b9d, #c44569);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        font-size: 2.5rem;
-        font-weight: 600;
+        background: linear-gradient(45deg, #ff6b9d, #c44569) !important;
+        -webkit-background-clip: text !important;
+        -webkit-text-fill-color: transparent !important;
+        background-clip: text !important;
+        font-size: 2.8rem !important;
+        font-weight: 700 !important;
+        margin: 0 !important;
+        text-shadow: 0 2px 10px rgba(255, 107, 157, 0.3) !important;
+    }
+    
+    /* Sidebar styling */
+    .css-1d391kg {
+        background: rgba(0, 0, 0, 0.3) !important;
+        backdrop-filter: blur(10px) !important;
+    }
+    
+    /* Success and warning messages */
+    .stSuccess {
+        background: rgba(76, 175, 80, 0.2) !important;
+        border: 1px solid rgba(76, 175, 80, 0.4) !important;
+        color: #4caf50 !important;
+        padding: 12px !important;
+        border-radius: 10px !important;
+        font-weight: 500 !important;
+    }
+    
+    .stWarning {
+        background: rgba(255, 152, 0, 0.2) !important;
+        border: 1px solid rgba(255, 152, 0, 0.4) !important;
+        color: #ff9800 !important;
+        padding: 12px !important;
+        border-radius: 10px !important;
+        font-weight: 500 !important;
+    }
+    
+    /* Spinner styling */
+    .stSpinner > div {
+        border-color: #ff6b9d !important;
+    }
+    
+    /* Container styling */
+    .main .block-container {
+        padding-top: 2rem !important;
+        padding-bottom: 2rem !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -198,6 +266,10 @@ def main():
             else:
                 st.warning("⚠️ Please enter your Anthropic API key to continue")
     
+    # Debug toggle
+    debug_mode = st.sidebar.checkbox("Debug Mode", value=False)
+    st.session_state.debug = debug_mode
+    
     # Initialize chat
     initialize_chat()
     
@@ -253,13 +325,17 @@ def main():
                 # Add AI response to messages
                 st.session_state.messages.append({"role": "assistant", "content": ai_response})
                 
-                # Clear input
-                st.session_state.user_input = ""
-                
-                # Rerun to update the display
+                # Clear input and rerun
                 st.rerun()
             else:
                 st.error("Sorry, I had trouble connecting. Please check your API key and try again!")
+    
+    # Debug info (remove this later)
+    if st.session_state.get('debug', False):
+        with st.expander("Debug Info"):
+            st.write("API Key configured:", bool(st.session_state.api_key))
+            st.write("Messages count:", len(st.session_state.messages))
+            st.write("Last user input:", user_input)
 
 if __name__ == "__main__":
     main() 
