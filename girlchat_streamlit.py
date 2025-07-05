@@ -2,6 +2,7 @@ import streamlit as st
 import anthropic
 import time
 import os
+import base64
 from typing import List, Dict
 from prompts import ACTIVE_PROMPT
 
@@ -99,6 +100,28 @@ st.markdown("""
         backdrop-filter: blur(20px) !important;
         transition: all 0.2s ease !important;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+    }
+    
+    /* Photo upload styling */
+    .stFileUploader {
+        background: rgba(255, 255, 255, 0.1) !important;
+        border: 2px dashed rgba(255, 255, 255, 0.3) !important;
+        border-radius: 10px !important;
+        padding: 20px !important;
+        text-align: center !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .stFileUploader:hover {
+        border-color: rgba(255, 255, 255, 0.5) !important;
+        background: rgba(255, 255, 255, 0.15) !important;
+    }
+    
+    /* Image display styling */
+    .stImage {
+        border-radius: 10px !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+        margin: 10px 0 !important;
     }
     
     .stTextInput > div > div > input:focus {
@@ -525,7 +548,7 @@ def initialize_chat():
         # Set flag to show typing animation for welcome message
         st.session_state.show_typing = True
 
-def get_ai_response(messages: List[Dict], api_key: str) -> str:
+def get_ai_response(messages: List[Dict], api_key: str, image_data: str = None) -> str:
     """Get response from Anthropic Claude API"""
     try:
         client = anthropic.Anthropic(api_key=api_key)
@@ -547,9 +570,32 @@ def get_ai_response(messages: List[Dict], api_key: str) -> str:
         if not conversation or not any(msg["role"] == "user" for msg in conversation):
             return "I'm ready to chat! What would you like to talk about?"
         
+        # If we have an image, add it to the last user message
+        if image_data and conversation:
+            last_user_msg = conversation[-1]
+            if last_user_msg["role"] == "user":
+                # Create a new message with image
+                conversation[-1] = {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": last_user_msg["content"]
+                        },
+                        {
+                            "type": "image",
+                            "source": {
+                                "type": "base64",
+                                "media_type": "image/jpeg",
+                                "data": image_data
+                            }
+                        }
+                    ]
+                }
+        
         response = client.messages.create(
             model="claude-3-haiku-20240307",
-            max_tokens=150,
+            max_tokens=200,  # Increased for image analysis
             temperature=0.8,
             system=system_message,
             messages=conversation
@@ -677,6 +723,35 @@ def main():
     
     # Mobile-friendly input layout
     if st.session_state.api_key:
+        # Photo upload section
+        st.markdown("### 📸 Photo Analysis")
+        uploaded_file = st.file_uploader(
+            "Upload a photo for me to analyze",
+            type=['png', 'jpg', 'jpeg'],
+            help="Upload an image and I'll analyze it for you!"
+        )
+        
+        # Display uploaded image if any
+        if uploaded_file is not None:
+            st.image(uploaded_file, caption="Uploaded Image", use_column_width=True)
+            
+            # Convert image to base64
+            image_bytes = uploaded_file.read()
+            image_base64 = base64.b64encode(image_bytes).decode('utf-8')
+            
+            # Add photo analysis button
+            analyze_photo = st.button(
+                "🔍 Analyze Photo",
+                use_container_width=True,
+                help="Click to have me analyze this photo"
+            )
+        else:
+            image_base64 = None
+            analyze_photo = False
+        
+        st.markdown("---")
+        
+        # Text input
         user_input = st.text_input(
             "Type your message...",
             key="user_input",
@@ -694,11 +769,34 @@ def main():
         st.info("Please enter your API key in the sidebar to start chatting")
         user_input = ""
         send_button = False
+        image_base64 = None
+        analyze_photo = False
     
     st.markdown("</div>", unsafe_allow_html=True)
     
-    # Handle user input
-    if send_button and user_input.strip() and st.session_state.api_key:
+    # Handle photo analysis
+    if analyze_photo and image_base64 and st.session_state.api_key:
+        # Add user message about photo analysis
+        photo_message = user_input.strip() if user_input.strip() else "Can you analyze this photo for me?"
+        st.session_state.messages.append({"role": "user", "content": photo_message})
+        
+        # Get AI response with image
+        ai_response = get_ai_response(st.session_state.messages, st.session_state.api_key, image_base64)
+        
+        if ai_response:
+            # Add AI response to messages
+            st.session_state.messages.append({"role": "assistant", "content": ai_response})
+            
+            # Set flag to show typing animation
+            st.session_state.show_typing = True
+            
+            # Clear input and rerun
+            st.rerun()
+        else:
+            st.error("Sorry, I had trouble analyzing the photo. Please check your API key and try again!")
+    
+    # Handle regular text input
+    elif send_button and user_input.strip() and st.session_state.api_key:
         # Add user message
         st.session_state.messages.append({"role": "user", "content": user_input})
         
