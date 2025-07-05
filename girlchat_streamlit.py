@@ -733,7 +733,7 @@ def main():
         
         # Display uploaded image if any
         if uploaded_file is not None:
-            st.image(uploaded_file, caption="Uploaded Image", use_column_width=True)
+            st.image(uploaded_file, caption="Uploaded Image", use_container_width=True)
             
             # Convert image to base64
             image_bytes = uploaded_file.read()
