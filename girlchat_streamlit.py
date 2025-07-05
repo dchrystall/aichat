@@ -1,5 +1,5 @@
 import streamlit as st
-import openai
+from openai import OpenAI
 import time
 import os
 from typing import List, Dict
@@ -128,8 +128,8 @@ def initialize_chat():
 def get_ai_response(messages: List[Dict], api_key: str) -> str:
     """Get response from OpenAI API"""
     try:
-        openai.api_key = api_key
-        response = openai.ChatCompletion.create(
+        client = OpenAI(api_key=api_key)
+        response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=messages,
             max_tokens=100,
