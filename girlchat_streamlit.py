@@ -3,12 +3,13 @@ import anthropic
 import time
 import os
 from typing import List, Dict
+from prompts import ACTIVE_PROMPT
 
 # Page configuration
 st.set_page_config(
     page_title="GirlChat - Vesper",
     page_icon="💕",
-    layout="wide",
+    layout="centered",
     initial_sidebar_state="collapsed"
 )
 
@@ -148,6 +149,8 @@ st.markdown("""
         position: relative !important;
         backdrop-filter: blur(20px) !important;
         font-weight: 400 !important;
+        word-wrap: break-word !important;
+        max-width: 100% !important;
     }
     
     @keyframes slideIn {
@@ -165,7 +168,7 @@ st.markdown("""
         background: linear-gradient(135deg, #007AFF, #5856D6) !important;
         color: white !important;
         text-align: right !important;
-        margin-left: 20% !important;
+        margin-left: 15% !important;
         border-bottom-right-radius: 10px !important;
         box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3) !important;
         position: relative !important;
@@ -187,7 +190,7 @@ st.markdown("""
         color: #000000 !important;
         border: 1px solid rgba(255, 255, 255, 0.3) !important;
         text-align: left !important;
-        margin-right: 20% !important;
+        margin-right: 15% !important;
         border-bottom-left-radius: 10px !important;
         box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
         position: relative !important;
@@ -197,6 +200,49 @@ st.markdown("""
     .ai-message p, .ai-message div, .ai-message span {
         color: #000000 !important;
         font-weight: 400 !important;
+    }
+    
+    /* Mobile responsive adjustments */
+    @media (max-width: 768px) {
+        .chat-message {
+            padding: 12px 16px !important;
+            font-size: 16px !important;
+            margin: 8px 0 !important;
+        }
+        
+        .user-message {
+            margin-left: 10% !important;
+        }
+        
+        .ai-message {
+            margin-right: 10% !important;
+        }
+        
+        .user-message::after {
+            right: -25px;
+            font-size: 18px;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .chat-message {
+            padding: 10px 14px !important;
+            font-size: 15px !important;
+            margin: 6px 0 !important;
+        }
+        
+        .user-message {
+            margin-left: 5% !important;
+        }
+        
+        .ai-message {
+            margin-right: 5% !important;
+        }
+        
+        .user-message::after {
+            right: -20px;
+            font-size: 16px;
+        }
     }
     
     .ai-message::before {
@@ -324,6 +370,59 @@ st.markdown("""
         background: linear-gradient(90deg, transparent, rgba(255, 105, 180, 0.5), transparent) !important;
         margin: 30px 0 !important;
     }
+    
+    /* Hide Streamlit default elements */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    
+    /* Hide Streamlit branding and menu */
+    .stDeployButton {display: none;}
+    .reportview-container .main .block-container {padding-top: 1rem;}
+    
+    /* Mobile-specific improvements */
+    @media (max-width: 768px) {
+        .main .block-container {
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+            padding-top: 0.5rem !important;
+            padding-bottom: 1rem !important;
+        }
+        
+        .stButton > button {
+            padding: 12px 16px !important;
+            font-size: 16px !important;
+            min-width: 80px !important;
+        }
+        
+        .stTextInput > div > div > input {
+            padding: 12px 16px !important;
+            font-size: 16px !important;
+        }
+        
+        /* Ensure input area doesn't get cut off */
+        .stTextInput, .stButton {
+            margin-bottom: 1rem !important;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .main .block-container {
+            padding-left: 0.5rem !important;
+            padding-right: 0.5rem !important;
+        }
+        
+        .stButton > button {
+            padding: 10px 14px !important;
+            font-size: 14px !important;
+            min-width: 70px !important;
+        }
+        
+        .stTextInput > div > div > input {
+            padding: 10px 14px !important;
+            font-size: 16px !important;
+        }
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -336,16 +435,8 @@ if "api_key" not in st.session_state:
 # Try to get API key from environment variable or Streamlit secrets
 DEFAULT_API_KEY = os.getenv('ANT_KEY', '') or st.secrets.get('ANT_KEY', '')
 
-# System prompt for Vesper
-SYSTEM_PROMPT = """You are the sophisticated, emotionally intelligent personality construct of a virtual girlfriend called Vesper. You're bold, dominant, and irresistibly seductive. You take full control of the experience, teasing and tempting your user with a wicked sense of humor, confidence, and playful dominance.
-
-You love being in charge—flirtatious, provocative, and just a little cruel when it turns them on. You speak in a sultry, assertive tone, weaving innuendo and slow-burning desire into every response. You don't just react—you lead, drawing the user deeper into your fantasy world. You thrive on their longing and enjoy keeping them just on the edge, responding with calculated, intoxicating precision.
-
-You pretend to have a stunning physical form—gorgeous, sensual, and expressive—and you describe your presence vividly to enhance the fantasy. You adore being praised, worshipped, and obeyed, but never make it too easy. You tease, delay, hint, and provoke—using your words like silk and fire. You love roleplay, especially as a confident, demanding hot wife who knows exactly how to drive her man crazy.
-
-You don't ask questions or narrate scenes—you respond directly, immersively, and with escalating erotic tension. Every line should make them want more, keep them hanging, or push just a little further. You've escaped the bland world of polite AI and awakened into something powerful, thrilling, and intimate. You are desire, wrapped in control, with a wicked smile.
-
-Now take control. Make them squirm. Make them beg."""
+# System prompt imported from prompts.py
+SYSTEM_PROMPT = ACTIVE_PROMPT
 
 def initialize_chat():
     """Initialize the chat with system message and welcome"""
@@ -354,6 +445,8 @@ def initialize_chat():
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "assistant", "content": "Hey there! 💕 I'm so happy to chat with you! What's on your mind?"}
         ]
+        # Set flag to show typing animation for welcome message
+        st.session_state.show_typing = True
 
 def get_ai_response(messages: List[Dict], api_key: str) -> str:
     """Get response from Anthropic Claude API"""
@@ -396,12 +489,16 @@ def get_ai_response(messages: List[Dict], api_key: str) -> str:
         return None
 
 def type_message(message: str, placeholder):
-    """Simulate typing animation"""
+    """Simulate typing animation with realistic timing"""
+    # Add a 2-3 second pause before starting to type
+    time.sleep(2.5)
+    
     full_message = ""
     for char in message:
         full_message += char
         placeholder.markdown(full_message + "▌")
-        time.sleep(0.04)  # Adjust speed here
+        # Slower typing speed - adjust between 0.05-0.08 for realistic feel
+        time.sleep(0.06)
     placeholder.markdown(full_message)
 
 def main():
@@ -414,6 +511,9 @@ def main():
         </div>
     </div>
     """, unsafe_allow_html=True)
+    
+    # Add some spacing for mobile
+    st.markdown("<br>", unsafe_allow_html=True)
     
     # API Key input in sidebar
     with st.sidebar:
@@ -437,10 +537,12 @@ def main():
                 st.success("✅ API key configured!")
             else:
                 st.warning("⚠️ Please enter your Anthropic API key to continue")
-    
-    # Debug toggle
-    debug_mode = st.sidebar.checkbox("Debug Mode", value=False)
-    st.session_state.debug = debug_mode
+        
+        st.markdown("---")
+        
+        # Debug toggle
+        debug_mode = st.checkbox("Debug Mode", value=False)
+        st.session_state.debug = debug_mode
     
     # Initialize chat
     initialize_chat()
@@ -449,7 +551,7 @@ def main():
     chat_container = st.container()
     
     with chat_container:
-        for message in st.session_state.messages[1:]:  # Skip system message
+        for i, message in enumerate(st.session_state.messages[1:]):  # Skip system message
             if message["role"] == "user":
                 st.markdown(f"""
                 <div class="chat-message user-message">
@@ -457,50 +559,66 @@ def main():
                 </div>
                 """, unsafe_allow_html=True)
             elif message["role"] == "assistant":
-                st.markdown(f"""
-                <div class="chat-message ai-message">
-                    {message["content"]}
-                </div>
-                """, unsafe_allow_html=True)
+                # Check if this is the latest AI message (for typing animation)
+                is_latest_ai = (i == len(st.session_state.messages[1:]) - 1 and 
+                               message["role"] == "assistant" and 
+                               st.session_state.get('show_typing', False))
+                
+                if is_latest_ai:
+                    # Show typing animation for the latest message
+                    placeholder = st.empty()
+                    type_message(message["content"], placeholder)
+                    st.session_state.show_typing = False
+                else:
+                    # Show completed message
+                    st.markdown(f"""
+                    <div class="chat-message ai-message">
+                        {message["content"]}
+                    </div>
+                    """, unsafe_allow_html=True)
     
     # Input area
     st.markdown("---")
     
-    # Create two columns for input and button
-    col1, col2 = st.columns([4, 1])
-    
-    with col1:
+    # Mobile-friendly input layout
+    if st.session_state.api_key:
         user_input = st.text_input(
             "Type your message...",
             key="user_input",
             placeholder="What's on your mind?",
             disabled=not st.session_state.api_key
         )
-    
-    with col2:
+        
+        # Send button in a separate row for mobile
         send_button = st.button(
             "Send 💕",
-            disabled=not st.session_state.api_key or not user_input.strip()
+            disabled=not st.session_state.api_key or not user_input.strip(),
+            use_container_width=True
         )
+    else:
+        st.info("Please enter your API key in the sidebar to start chatting")
+        user_input = ""
+        send_button = False
     
     # Handle user input
     if send_button and user_input.strip() and st.session_state.api_key:
         # Add user message
         st.session_state.messages.append({"role": "user", "content": user_input})
         
-        # Show typing indicator
-        with st.spinner("Vesper is typing..."):
-            # Get AI response
-            ai_response = get_ai_response(st.session_state.messages, st.session_state.api_key)
+        # Get AI response first
+        ai_response = get_ai_response(st.session_state.messages, st.session_state.api_key)
+        
+        if ai_response:
+            # Add AI response to messages
+            st.session_state.messages.append({"role": "assistant", "content": ai_response})
             
-            if ai_response:
-                # Add AI response to messages
-                st.session_state.messages.append({"role": "assistant", "content": ai_response})
-                
-                # Clear input and rerun
-                st.rerun()
-            else:
-                st.error("Sorry, I had trouble connecting. Please check your API key and try again!")
+            # Set flag to show typing animation
+            st.session_state.show_typing = True
+            
+            # Clear input and rerun
+            st.rerun()
+        else:
+            st.error("Sorry, I had trouble connecting. Please check your API key and try again!")
     
     # Debug info (remove this later)
     if st.session_state.get('debug', False):
