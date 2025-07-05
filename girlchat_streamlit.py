@@ -15,57 +15,112 @@ st.set_page_config(
 # Custom CSS for dark theme and styling
 st.markdown("""
 <style>
-    /* Main background and text */
+    /* Import Google Fonts */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
+    
+    /* Main background with animated gradient */
     .main {
-        background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+        background: linear-gradient(-45deg, #1a0033, #330033, #4d004d, #660066);
+        background-size: 400% 400%;
+        animation: gradientShift 15s ease infinite;
         color: #ffffff;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        min-height: 100vh;
+    }
+    
+    @keyframes gradientShift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+    
+    /* Floating particles background */
+    .main::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: 
+            radial-gradient(circle at 20% 80%, rgba(255, 107, 157, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(255, 182, 193, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 40% 40%, rgba(255, 20, 147, 0.05) 0%, transparent 50%);
+        pointer-events: none;
+        z-index: -1;
     }
     
     /* Better text readability */
     .stMarkdown, .stText {
         color: #ffffff !important;
         font-size: 16px !important;
-        line-height: 1.6 !important;
+        line-height: 1.7 !important;
+        font-weight: 400 !important;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
     }
     
-    /* Input field styling */
+    /* Enhanced input field styling */
     .stTextInput > div > div > input {
-        background: rgba(255, 255, 255, 0.15) !important;
-        border: 2px solid rgba(255, 107, 157, 0.3) !important;
+        background: rgba(255, 255, 255, 0.12) !important;
+        border: 2px solid rgba(255, 107, 157, 0.4) !important;
         color: #ffffff !important;
-        border-radius: 25px !important;
-        padding: 15px 20px !important;
+        border-radius: 30px !important;
+        padding: 18px 25px !important;
         font-size: 16px !important;
         font-weight: 500 !important;
+        font-family: 'Inter', sans-serif !important;
+        backdrop-filter: blur(10px) !important;
+        transition: all 0.3s ease !important;
     }
     
     .stTextInput > div > div > input:focus {
-        border-color: #ff6b9d !important;
-        box-shadow: 0 0 25px rgba(255, 107, 157, 0.4) !important;
-        background: rgba(255, 255, 255, 0.2) !important;
+        border-color: #ff69b4 !important;
+        box-shadow: 0 0 30px rgba(255, 105, 180, 0.5) !important;
+        background: rgba(255, 255, 255, 0.18) !important;
+        transform: translateY(-2px) !important;
     }
     
     .stTextInput > div > div > input::placeholder {
-        color: rgba(255, 255, 255, 0.7) !important;
+        color: rgba(255, 255, 255, 0.6) !important;
+        font-weight: 400 !important;
     }
     
-    /* Button styling */
+    /* Enhanced button styling */
     .stButton > button {
-        background: linear-gradient(135deg, #ff6b9d, #c44569) !important;
+        background: linear-gradient(135deg, #ff69b4, #ff1493, #c71585) !important;
         color: white !important;
         border: none !important;
-        border-radius: 25px !important;
-        padding: 15px 25px !important;
+        border-radius: 30px !important;
+        padding: 18px 30px !important;
         font-weight: 600 !important;
         font-size: 16px !important;
+        font-family: 'Poppins', sans-serif !important;
         transition: all 0.3s ease !important;
-        min-width: 100px !important;
+        min-width: 120px !important;
+        position: relative !important;
+        overflow: hidden !important;
+        box-shadow: 0 8px 25px rgba(255, 105, 180, 0.3) !important;
+    }
+    
+    .stButton > button::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.5s;
+    }
+    
+    .stButton > button:hover::before {
+        left: 100%;
     }
     
     .stButton > button:hover {
-        transform: translateY(-2px) !important;
-        box-shadow: 0 8px 25px rgba(255, 107, 157, 0.5) !important;
+        transform: translateY(-3px) !important;
+        box-shadow: 0 12px 35px rgba(255, 105, 180, 0.6) !important;
+        background: linear-gradient(135deg, #ff1493, #c71585, #ff69b4) !important;
     }
     
     .stButton > button:disabled {
@@ -73,97 +128,185 @@ st.markdown("""
         transform: none !important;
     }
     
-    /* Chat message styling */
+    /* Enhanced chat message styling */
     .chat-message {
-        padding: 18px 20px !important;
-        border-radius: 20px !important;
-        margin: 15px 0 !important;
-        animation: fadeIn 0.4s ease-in !important;
+        padding: 20px 25px !important;
+        border-radius: 25px !important;
+        margin: 20px 0 !important;
+        animation: slideIn 0.5s ease-out !important;
         font-size: 16px !important;
-        line-height: 1.5 !important;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
+        line-height: 1.6 !important;
+        font-family: 'Inter', sans-serif !important;
+        position: relative !important;
+        backdrop-filter: blur(15px) !important;
+    }
+    
+    @keyframes slideIn {
+        from { 
+            opacity: 0; 
+            transform: translateY(20px) scale(0.95); 
+        }
+        to { 
+            opacity: 1; 
+            transform: translateY(0) scale(1); 
+        }
     }
     
     .user-message {
-        background: linear-gradient(135deg, #ff6b9d, #c44569) !important;
+        background: linear-gradient(135deg, #ff69b4, #ff1493, #c71585) !important;
         color: white !important;
         text-align: right !important;
-        margin-left: 25% !important;
-        border-bottom-right-radius: 8px !important;
+        margin-left: 20% !important;
+        border-bottom-right-radius: 10px !important;
+        box-shadow: 0 8px 25px rgba(255, 105, 180, 0.4) !important;
+        position: relative !important;
+    }
+    
+    .user-message::after {
+        content: '💕';
+        position: absolute;
+        right: -30px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 20px;
+        animation: pulse 2s infinite;
     }
     
     .ai-message {
-        background: rgba(255, 255, 255, 0.12) !important;
+        background: rgba(255, 255, 255, 0.15) !important;
         color: #ffffff !important;
-        border: 1px solid rgba(255, 255, 255, 0.25) !important;
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
         text-align: left !important;
-        margin-right: 25% !important;
-        border-bottom-left-radius: 8px !important;
-        backdrop-filter: blur(10px) !important;
+        margin-right: 20% !important;
+        border-bottom-left-radius: 10px !important;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2) !important;
+        position: relative !important;
     }
     
-    /* Animations */
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(15px); }
-        to { opacity: 1; transform: translateY(0); }
+    .ai-message::before {
+        content: '✨';
+        position: absolute;
+        left: -30px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 20px;
+        animation: sparkle 2s infinite;
     }
     
-    /* Header styling */
+    @keyframes pulse {
+        0%, 100% { transform: translateY(-50%) scale(1); }
+        50% { transform: translateY(-50%) scale(1.1); }
+    }
+    
+    @keyframes sparkle {
+        0%, 100% { transform: translateY(-50%) rotate(0deg); }
+        50% { transform: translateY(-50%) rotate(180deg); }
+    }
+    
+    /* Enhanced header styling */
     .header {
         text-align: center !important;
-        padding: 25px !important;
-        background: rgba(0, 0, 0, 0.4) !important;
-        border-radius: 20px !important;
-        margin-bottom: 25px !important;
-        backdrop-filter: blur(15px) !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        padding: 30px !important;
+        background: rgba(0, 0, 0, 0.3) !important;
+        border-radius: 25px !important;
+        margin-bottom: 30px !important;
+        backdrop-filter: blur(20px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        position: relative !important;
+        overflow: hidden !important;
+    }
+    
+    .header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(45deg, transparent, rgba(255, 105, 180, 0.1), transparent);
+        animation: shimmer 3s infinite;
+    }
+    
+    @keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
     }
     
     .header h1 {
-        background: linear-gradient(45deg, #ff6b9d, #c44569) !important;
+        background: linear-gradient(45deg, #ff69b4, #ff1493, #c71585, #ff69b4) !important;
+        background-size: 300% 300% !important;
         -webkit-background-clip: text !important;
         -webkit-text-fill-color: transparent !important;
         background-clip: text !important;
-        font-size: 2.8rem !important;
+        font-size: 3.2rem !important;
         font-weight: 700 !important;
+        font-family: 'Poppins', sans-serif !important;
         margin: 0 !important;
-        text-shadow: 0 2px 10px rgba(255, 107, 157, 0.3) !important;
+        text-shadow: 0 4px 15px rgba(255, 105, 180, 0.3) !important;
+        animation: gradientFlow 4s ease infinite !important;
+        position: relative !important;
+        z-index: 1 !important;
     }
     
-    /* Sidebar styling */
+    @keyframes gradientFlow {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+    }
+    
+    /* Enhanced sidebar styling */
     .css-1d391kg {
-        background: rgba(0, 0, 0, 0.3) !important;
-        backdrop-filter: blur(10px) !important;
+        background: rgba(0, 0, 0, 0.4) !important;
+        backdrop-filter: blur(15px) !important;
+        border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
     }
     
-    /* Success and warning messages */
+    /* Enhanced success and warning messages */
     .stSuccess {
         background: rgba(76, 175, 80, 0.2) !important;
         border: 1px solid rgba(76, 175, 80, 0.4) !important;
         color: #4caf50 !important;
-        padding: 12px !important;
-        border-radius: 10px !important;
+        padding: 15px !important;
+        border-radius: 15px !important;
         font-weight: 500 !important;
+        backdrop-filter: blur(10px) !important;
     }
     
     .stWarning {
         background: rgba(255, 152, 0, 0.2) !important;
         border: 1px solid rgba(255, 152, 0, 0.4) !important;
         color: #ff9800 !important;
-        padding: 12px !important;
-        border-radius: 10px !important;
+        padding: 15px !important;
+        border-radius: 15px !important;
         font-weight: 500 !important;
+        backdrop-filter: blur(10px) !important;
     }
     
-    /* Spinner styling */
+    /* Enhanced spinner styling */
     .stSpinner > div {
-        border-color: #ff6b9d !important;
+        border-color: #ff69b4 !important;
+        border-width: 3px !important;
     }
     
     /* Container styling */
     .main .block-container {
         padding-top: 2rem !important;
         padding-bottom: 2rem !important;
+        max-width: 1000px !important;
+    }
+    
+    /* Checkbox styling */
+    .stCheckbox > label {
+        color: #ffffff !important;
+        font-weight: 500 !important;
+        font-family: 'Inter', sans-serif !important;
+    }
+    
+    /* Divider styling */
+    hr {
+        border: none !important;
+        height: 1px !important;
+        background: linear-gradient(90deg, transparent, rgba(255, 105, 180, 0.5), transparent) !important;
+        margin: 30px 0 !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -201,27 +344,37 @@ def get_ai_response(messages: List[Dict], api_key: str) -> str:
     try:
         client = anthropic.Anthropic(api_key=api_key)
         
-        # Convert messages to Claude format
-        system_message = messages[0]["content"] if messages and messages[0]["role"] == "system" else ""
-        user_messages = [msg["content"] for msg in messages if msg["role"] == "user"]
-        assistant_messages = [msg["content"] for msg in messages if msg["role"] == "assistant"]
-        
-        # Build conversation history
+        # Extract system message and conversation
+        system_message = ""
         conversation = []
-        for i in range(max(len(user_messages), len(assistant_messages))):
-            if i < len(user_messages):
-                conversation.append({"role": "user", "content": user_messages[i]})
-            if i < len(assistant_messages):
-                conversation.append({"role": "assistant", "content": assistant_messages[i]})
+        
+        for msg in messages:
+            if msg["role"] == "system":
+                system_message = msg["content"]
+            elif msg["role"] in ["user", "assistant"]:
+                conversation.append({
+                    "role": msg["role"],
+                    "content": msg["content"]
+                })
+        
+        # Make sure we have at least one user message
+        if not conversation or not any(msg["role"] == "user" for msg in conversation):
+            return "I'm ready to chat! What would you like to talk about?"
         
         response = client.messages.create(
             model="claude-3-haiku-20240307",
-            max_tokens=100,
+            max_tokens=150,
             temperature=0.8,
             system=system_message,
             messages=conversation
         )
-        return response.content[0].text
+        
+        # Check if response has content
+        if response.content and len(response.content) > 0:
+            return response.content[0].text
+        else:
+            return "I'm having trouble responding right now. Can you try again?"
+            
     except Exception as e:
         st.error(f"Error connecting to Anthropic: {str(e)}")
         return None
@@ -236,10 +389,13 @@ def type_message(message: str, placeholder):
     placeholder.markdown(full_message)
 
 def main():
-    # Header
+    # Header with graphics
     st.markdown("""
     <div class="header">
         <h1>💕 GirlChat - Vesper</h1>
+        <div style="margin-top: 10px; font-size: 18px; color: rgba(255, 255, 255, 0.8); font-weight: 400;">
+            Your seductive AI companion awaits...
+        </div>
     </div>
     """, unsafe_allow_html=True)
     
