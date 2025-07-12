@@ -545,6 +545,28 @@ DEFAULT_API_KEY = os.getenv('ANT_KEY', '') or st.secrets.get('ANT_KEY', '')
 # System prompt imported from prompts.py
 SYSTEM_PROMPT = ACTIVE_PROMPT
 
+HISTORY_FILE = "chat_history.txt"
+
+def append_to_history(role, content):
+    with open(HISTORY_FILE, "a", encoding="utf-8") as f:
+        f.write(f"{role}: {content}\n")
+
+def get_last_n_messages(n=3):
+    if not os.path.exists(HISTORY_FILE):
+        return []
+    with open(HISTORY_FILE, "r", encoding="utf-8") as f:
+        lines = f.readlines()
+    # Parse lines into (role, content)
+    messages = []
+    for line in lines:
+        if ": " in line:
+            role, content = line.split(": ", 1)
+            messages.append((role.strip(), content.strip()))
+    # Get last n user and last n assistant messages
+    user_msgs = [m for m in messages if m[0] == "user"][-n:]
+    ai_msgs = [m for m in messages if m[0] == "assistant"][-n:]
+    return user_msgs, ai_msgs
+
 def update_user_memory(user_input: str, ai_response: str):
     """Update memory with new conversation data using memory manager"""
     st.session_state.memory_manager.update_conversation(user_input, ai_response)
@@ -841,6 +863,19 @@ def main():
     <div style="max-height: 60vh; overflow-y: auto; margin-bottom: 1rem;">
     """, unsafe_allow_html=True)
     
+    # Show last 3 messages from both sides if history exists
+    user_msgs, ai_msgs = get_last_n_messages(3)
+    if user_msgs or ai_msgs:
+        st.markdown("<div style='margin-bottom: 1rem;'><b>Recent Conversation:</b></div>", unsafe_allow_html=True)
+        for u, a in zip(user_msgs, ai_msgs):
+            st.markdown(f"<div class='chat-message user-message'><b>You:</b> {u[1]}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='chat-message ai-message'><b>Vesper:</b> {a[1]}</div>", unsafe_allow_html=True)
+        # If uneven, show remaining
+        for u in user_msgs[len(ai_msgs):]:
+            st.markdown(f"<div class='chat-message user-message'><b>You:</b> {u[1]}</div>", unsafe_allow_html=True)
+        for a in ai_msgs[len(user_msgs):]:
+            st.markdown(f"<div class='chat-message ai-message'><b>Vesper:</b> {a[1]}</div>", unsafe_allow_html=True)
+
     for i, message in enumerate(st.session_state.messages[1:]):  # Skip system message
         if message["role"] == "user":
             st.markdown(f"""
@@ -935,6 +970,8 @@ def main():
                 update_user_memory(user_input, ai_response)
                 st.session_state.messages.append({"role": "assistant", "content": ai_response})
                 st.session_state.show_typing = True
+                append_to_history("user", user_input)
+                append_to_history("assistant", ai_response)
             else:
                 st.error("Sorry, I had trouble connecting. Please check your API key and try again!")
         st.session_state['clear_input'] = True
