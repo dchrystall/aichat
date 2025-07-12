@@ -940,7 +940,7 @@ def main():
         st.session_state['clear_input'] = True
         st.session_state['image_base64'] = None
         st.session_state['send_message'] = False
-        st.experimental_rerun()
+        # st.experimental_rerun()  # <-- REMOVE this line
     
     # Debug info (remove this later)
     if st.session_state.get('debug', False):
