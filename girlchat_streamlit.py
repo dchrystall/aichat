@@ -883,6 +883,16 @@ def main():
         disabled=not st.session_state.api_key,
         on_change=handle_user_input
     )
+    # Auto-focus the input box after each rerun
+    st.markdown("""
+    <script>
+    // Focus the input box after rerun
+    setTimeout(function() {
+        var input = window.parent.document.querySelector('input[id^="user_input"]');
+        if(input){ input.focus(); }
+    }, 100);
+    </script>
+    """, unsafe_allow_html=True)
     # (Optional) Remove the send button for pure Enter-to-send, or keep for both options
     # Photo upload section - below input
     st.markdown("### 📸 Photo Upload")
