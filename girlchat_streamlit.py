@@ -710,6 +710,34 @@ def type_message(message: str, placeholder):
     </div>
     """, unsafe_allow_html=True)
 
+def handle_user_input():
+    user_input = st.session_state.get('user_input', '').strip()
+    if user_input and st.session_state.api_key:
+        # Update last user message time
+        st.session_state.last_user_message_time = time.time()
+        # Add user message
+        st.session_state.messages.append({"role": "user", "content": user_input})
+        # Check if this might be a name (first message and no name stored yet)
+        memory_name = st.session_state.memory_manager.memory_data["user_profile"]["name"]
+        if not memory_name and len(st.session_state.messages) <= 3:
+            potential_name = user_input
+            if len(potential_name) <= 20 and not any(word in potential_name.lower() for word in ['what', 'how', 'why', 'when', 'where', 'who', '?']):
+                st.session_state.memory_manager.memory_data["user_profile"]["name"] = potential_name
+                st.session_state.memory_manager.save_memory()
+        # Get AI response (with image if uploaded)
+        image_base64 = st.session_state.get('image_base64', None)
+        ai_response = get_ai_response(st.session_state.messages, st.session_state.api_key, image_base64)
+        if ai_response:
+            update_user_memory(user_input, ai_response)
+            st.session_state.messages.append({"role": "assistant", "content": ai_response})
+            st.session_state.show_typing = True
+        else:
+            st.error("Sorry, I had trouble connecting. Please check your API key and try again!")
+        # Clear input
+        st.session_state['user_input'] = ''
+        st.session_state['image_base64'] = None
+        st.rerun()
+
 def main():
     # Header with graphics
     st.markdown("""
@@ -871,80 +899,71 @@ def main():
     
     # Mobile-friendly input layout
     if st.session_state.api_key:
-        # Text input
+        # Text input with on_change handler for Enter-to-send
         user_input = st.text_input(
             "Type your message...",
             key="user_input",
             placeholder="What's on your mind?",
-            disabled=not st.session_state.api_key
+            disabled=not st.session_state.api_key,
+            on_change=handle_user_input
         )
-        
-        # Send button in a separate row for mobile
-        send_button = st.button(
-            "Send 💕",
-            disabled=not st.session_state.api_key or not user_input.strip(),
-            use_container_width=True
-        )
-        
-        # Photo upload section - below send button
+        # (Optional) Remove the send button for pure Enter-to-send, or keep for both options
+        # Photo upload section - below input
         st.markdown("### 📸 Photo Upload")
         uploaded_file = st.file_uploader(
             "Upload a photo (optional)",
             type=['png', 'jpg', 'jpeg'],
             help="Upload an image and mention it in your message for analysis!"
         )
-        
-        # Display uploaded image if any
         if uploaded_file is not None:
             st.image(uploaded_file, caption="Uploaded Image", use_container_width=True)
-            
-            # Convert image to base64
             image_bytes = uploaded_file.read()
             image_base64 = base64.b64encode(image_bytes).decode('utf-8')
+            st.session_state['image_base64'] = image_base64
         else:
-            image_base64 = None
+            st.session_state['image_base64'] = None
     else:
         st.info("Please enter your API key in the sidebar to start chatting")
         user_input = ""
-        send_button = False
-        image_base64 = None
+        st.session_state['image_base64'] = None
     
     st.markdown("</div>", unsafe_allow_html=True)
     
     # Handle user input (with optional photo analysis)
-    if send_button and user_input.strip() and st.session_state.api_key:
-        # Update last user message time
-        st.session_state.last_user_message_time = time.time()
+    # This block is now handled by the on_change of the text_input
+    # if send_button and user_input.strip() and st.session_state.api_key:
+    #     # Update last user message time
+    #     st.session_state.last_user_message_time = time.time()
         
-        # Add user message
-        st.session_state.messages.append({"role": "user", "content": user_input})
+    #     # Add user message
+    #     st.session_state.messages.append({"role": "user", "content": user_input})
         
-        # Check if this might be a name (first message and no name stored yet)
-        memory_name = st.session_state.memory_manager.memory_data["user_profile"]["name"]
-        if not memory_name and len(st.session_state.messages) <= 3:
-            # Simple name detection - if it's a short response and doesn't look like a question
-            potential_name = user_input.strip()
-            if len(potential_name) <= 20 and not any(word in potential_name.lower() for word in ['what', 'how', 'why', 'when', 'where', 'who', '?']):
-                st.session_state.memory_manager.memory_data["user_profile"]["name"] = potential_name
-                st.session_state.memory_manager.save_memory()
+    #     # Check if this might be a name (first message and no name stored yet)
+    #     memory_name = st.session_state.memory_manager.memory_data["user_profile"]["name"]
+    #     if not memory_name and len(st.session_state.messages) <= 3:
+    #         # Simple name detection - if it's a short response and doesn't look like a question
+    #         potential_name = user_input.strip()
+    #         if len(potential_name) <= 20 and not any(word in potential_name.lower() for word in ['what', 'how', 'why', 'when', 'where', 'who', '?']):
+    #             st.session_state.memory_manager.memory_data["user_profile"]["name"] = potential_name
+    #             st.session_state.memory_manager.save_memory()
         
-        # Get AI response (with image if uploaded)
-        ai_response = get_ai_response(st.session_state.messages, st.session_state.api_key, image_base64)
+    #     # Get AI response (with image if uploaded)
+    #     ai_response = get_ai_response(st.session_state.messages, st.session_state.api_key, image_base64)
         
-        if ai_response:
-            # Update memory with new conversation data
-            update_user_memory(user_input, ai_response)
+    #     if ai_response:
+    #         # Update memory with new conversation data
+    #         update_user_memory(user_input, ai_response)
             
-            # Add AI response to messages
-            st.session_state.messages.append({"role": "assistant", "content": ai_response})
+    #         # Add AI response to messages
+    #         st.session_state.messages.append({"role": "assistant", "content": ai_response})
             
-            # Set flag to show typing animation
-            st.session_state.show_typing = True
+    #         # Set flag to show typing animation
+    #         st.session_state.show_typing = True
             
-            # Clear input and rerun
-            st.rerun()
-        else:
-            st.error("Sorry, I had trouble connecting. Please check your API key and try again!")
+    #         # Clear input and rerun
+    #         st.rerun()
+    #     else:
+    #         st.error("Sorry, I had trouble connecting. Please check your API key and try again!")
     
     # Debug info (remove this later)
     if st.session_state.get('debug', False):
