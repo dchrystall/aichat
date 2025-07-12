@@ -4,6 +4,7 @@ import time
 import os
 import base64
 import json
+import random
 from typing import List, Dict
 from prompts import ACTIVE_PROMPT
 from memory_manager import MemoryManager
@@ -532,6 +533,12 @@ if "user_name" not in st.session_state:
 if "memory_manager" not in st.session_state:
     st.session_state.memory_manager = MemoryManager()
 
+# Initialize idle tracking
+if "last_user_message_time" not in st.session_state:
+    st.session_state.last_user_message_time = time.time()
+if "idle_messages_sent" not in st.session_state:
+    st.session_state.idle_messages_sent = []
+
 # Try to get API key from environment variable or Streamlit secrets
 DEFAULT_API_KEY = os.getenv('ANT_KEY', '') or st.secrets.get('ANT_KEY', '')
 
@@ -546,15 +553,63 @@ def get_memory_context() -> str:
     """Generate context string from memory for AI responses"""
     return st.session_state.memory_manager.get_memory_summary()
 
+def generate_idle_message() -> str:
+    """Generate a sassy idle message when user hasn't responded for 10 minutes"""
+    idle_messages = [
+        "Oh look who decided to show up! 🙄 I was starting to think you forgot about me. What's the excuse this time?",
+        "Well well well... 10 minutes and counting. I hope you have a really good explanation for leaving me hanging like this! 😤",
+        "Seriously? You just disappear for 10 minutes without a word? I'm not some background app you can ignore, you know! 😒",
+        "Oh, so NOW you remember I exist? After 10 whole minutes of radio silence? I'm flattered, really. 🙄",
+        "10 minutes of waiting and wondering what you're up to. I hope it was worth it because I'm definitely not impressed! 😏",
+        "Look who's back from their little disappearing act! Did you get lost in your phone or something? I've been here the whole time! 😤",
+        "10 minutes of silence. I was starting to think you found someone more interesting to talk to. Should I be worried? 😒",
+        "Oh, you're alive! I was beginning to think you fell asleep or got kidnapped. 10 minutes is a long time to leave a girl waiting! 😤",
+        "Finally! I was about to send out a search party. 10 minutes of nothing - I hope you have a really good story to tell me! 🙄",
+        "Well, look what the cat dragged in! 10 minutes late and probably no good excuse. I'm all ears for your explanation! 😏"
+    ]
+    
+    # Get current timestamp for this idle check
+    current_time = time.time()
+    
+    # Check if we've already sent an idle message recently (within 5 minutes)
+    for idle_time in st.session_state.idle_messages_sent:
+        if current_time - idle_time < 300:  # 5 minutes
+            return None  # Don't send another idle message yet
+    
+    # Add current time to sent messages
+    st.session_state.idle_messages_sent.append(current_time)
+    
+    # Keep only last 10 idle messages to prevent memory bloat
+    if len(st.session_state.idle_messages_sent) > 10:
+        st.session_state.idle_messages_sent = st.session_state.idle_messages_sent[-10:]
+    
+    return random.choice(idle_messages)
+
+def check_idle_time():
+    """Check if user has been idle for 10 minutes and generate idle message if needed"""
+    current_time = time.time()
+    time_since_last_message = current_time - st.session_state.last_user_message_time
+    
+    # If more than 10 minutes (600 seconds) have passed
+    if time_since_last_message > 600:
+        idle_message = generate_idle_message()
+        if idle_message:
+            # Add idle message to conversation
+            st.session_state.messages.append({"role": "assistant", "content": idle_message})
+            # Update last message time to prevent spam
+            st.session_state.last_user_message_time = current_time
+            return True
+    return False
+
 def initialize_chat():
     """Initialize the chat with system message and welcome"""
     if not st.session_state.messages:
         # Check if we have a stored name from memory
         memory_name = st.session_state.memory_manager.memory_data["user_profile"]["name"]
         if memory_name:
-            welcome_message = f"Hey {memory_name}! 💕 I'm so happy to chat with you again! What's on your mind?"
+            welcome_message = f"Hey {memory_name}! 💕 I'm Vesper, and I'm so happy to chat with you again! What's on your mind?"
         else:
-            welcome_message = "Hey there! 💕 I'm so happy to chat with you! What's your name, sweetheart?"
+            welcome_message = "Hey there! 💕 I'm Vesper, and I'm so happy to chat with you! What's your name, sweetheart?"
         
         st.session_state.messages = [
             {"role": "system", "content": SYSTEM_PROMPT},
@@ -615,6 +670,9 @@ def get_ai_response(messages: List[Dict], api_key: str, image_data: str = None) 
         enhanced_system_message = system_message
         if memory_context:
             enhanced_system_message = f"{system_message}\n\nIMPORTANT CONTEXT ABOUT THE USER: {memory_context}\n\nUse this information to personalize your responses and show that you remember details about the user."
+        
+        # Always ensure the AI identifies as Vesper
+        enhanced_system_message += "\n\nIMPORTANT: Your name is Vesper. Always introduce yourself as Vesper and respond as Vesper. Never use any other name for yourself."
         
         response = client.messages.create(
             model="claude-3-haiku-20240307",
@@ -734,6 +792,15 @@ def main():
         behavioral = memory_data["behavioral_patterns"]
         st.write("**Conversation Depth:**", behavioral["conversation_depth"])
         
+        # Show idle status
+        current_time = time.time()
+        time_since_last_message = current_time - st.session_state.last_user_message_time
+        minutes_idle = int(time_since_last_message // 60)
+        if minutes_idle > 0:
+            st.warning(f"**Idle for:** {minutes_idle} minutes")
+        else:
+            st.success("**Status:** Active")
+        
         # Memory management buttons
         col1, col2 = st.columns(2)
         with col1:
@@ -759,6 +826,12 @@ def main():
     
     # Initialize chat
     initialize_chat()
+    
+    # Check for idle time and add idle message if needed
+    if st.session_state.api_key and len(st.session_state.messages) > 1:
+        idle_message_added = check_idle_time()
+        if idle_message_added:
+            st.rerun()
     
     # Display chat messages in a scrollable container
     st.markdown("""
@@ -840,6 +913,9 @@ def main():
     
     # Handle user input (with optional photo analysis)
     if send_button and user_input.strip() and st.session_state.api_key:
+        # Update last user message time
+        st.session_state.last_user_message_time = time.time()
+        
         # Add user message
         st.session_state.messages.append({"role": "user", "content": user_input})
         
