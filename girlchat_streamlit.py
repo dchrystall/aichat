@@ -3,8 +3,10 @@ import anthropic
 import time
 import os
 import base64
+import json
 from typing import List, Dict
 from prompts import ACTIVE_PROMPT
+from memory_manager import MemoryManager
 
 # Page configuration
 st.set_page_config(
@@ -526,18 +528,31 @@ if "api_key" not in st.session_state:
 if "user_name" not in st.session_state:
     st.session_state.user_name = None
 
+# Initialize memory manager
+if "memory_manager" not in st.session_state:
+    st.session_state.memory_manager = MemoryManager()
+
 # Try to get API key from environment variable or Streamlit secrets
 DEFAULT_API_KEY = os.getenv('ANT_KEY', '') or st.secrets.get('ANT_KEY', '')
 
 # System prompt imported from prompts.py
 SYSTEM_PROMPT = ACTIVE_PROMPT
 
+def update_user_memory(user_input: str, ai_response: str):
+    """Update memory with new conversation data using memory manager"""
+    st.session_state.memory_manager.update_conversation(user_input, ai_response)
+
+def get_memory_context() -> str:
+    """Generate context string from memory for AI responses"""
+    return st.session_state.memory_manager.get_memory_summary()
+
 def initialize_chat():
     """Initialize the chat with system message and welcome"""
     if not st.session_state.messages:
-        # Check if we have a stored name
-        if st.session_state.user_name:
-            welcome_message = f"Hey {st.session_state.user_name}! 💕 I'm so happy to chat with you again! What's on your mind?"
+        # Check if we have a stored name from memory
+        memory_name = st.session_state.memory_manager.memory_data["user_profile"]["name"]
+        if memory_name:
+            welcome_message = f"Hey {memory_name}! 💕 I'm so happy to chat with you again! What's on your mind?"
         else:
             welcome_message = "Hey there! 💕 I'm so happy to chat with you! What's your name, sweetheart?"
         
@@ -549,9 +564,12 @@ def initialize_chat():
         st.session_state.show_typing = True
 
 def get_ai_response(messages: List[Dict], api_key: str, image_data: str = None) -> str:
-    """Get response from Anthropic Claude API"""
+    """Get response from Anthropic Claude API with memory context"""
     try:
         client = anthropic.Anthropic(api_key=api_key)
+        
+        # Get memory context
+        memory_context = get_memory_context()
         
         # Extract system message and conversation
         system_message = ""
@@ -593,11 +611,16 @@ def get_ai_response(messages: List[Dict], api_key: str, image_data: str = None) 
                     ]
                 }
         
+        # Add memory context to system message if available
+        enhanced_system_message = system_message
+        if memory_context:
+            enhanced_system_message = f"{system_message}\n\nIMPORTANT CONTEXT ABOUT THE USER: {memory_context}\n\nUse this information to personalize your responses and show that you remember details about the user."
+        
         response = client.messages.create(
             model="claude-3-haiku-20240307",
             max_tokens=200,  # Increased for image analysis
             temperature=0.8,
-            system=system_message,
+            system=enhanced_system_message,
             messages=conversation
         )
         
@@ -667,14 +690,66 @@ def main():
         
         # User name section
         st.markdown("### 👤 User Info")
-        if st.session_state.user_name:
-            st.success(f"**Name:** {st.session_state.user_name}")
+        memory_name = st.session_state.memory_manager.memory_data["user_profile"]["name"]
+        if memory_name:
+            st.success(f"**Name:** {memory_name}")
             if st.button("Change Name"):
-                st.session_state.user_name = None
+                st.session_state.memory_manager.memory_data["user_profile"]["name"] = None
+                st.session_state.memory_manager.save_memory()
                 st.session_state.messages = []
                 st.rerun()
         else:
             st.info("Name not set yet")
+        
+        st.markdown("---")
+        
+        # Memory display section
+        st.markdown("### 🧠 Memory Bank")
+        
+        memory_data = st.session_state.memory_manager.memory_data
+        
+        # Show user profile
+        profile = memory_data["user_profile"]
+        if profile["name"]:
+            st.write("**Name:**", profile["name"])
+        if profile["age"]:
+            st.write("**Age:**", profile["age"])
+        if profile["location"]:
+            st.write("**Location:**", profile["location"])
+        if profile["interests"]:
+            st.write("**Interests:**", ", ".join(profile["interests"]))
+        
+        # Show conversation stats
+        conv_history = memory_data["conversation_history"]
+        st.write("**Conversations:**", conv_history["conversation_count"])
+        if conv_history["favorite_topics"]:
+            st.write("**Favorite Topics:**", ", ".join(conv_history["favorite_topics"][-3:]))
+        
+        # Show emotional context
+        emotional = memory_data["emotional_context"]
+        st.write("**Current Mood:**", emotional["current_mood"])
+        st.write("**Engagement:**", emotional["engagement_level"])
+        
+        # Show behavioral patterns
+        behavioral = memory_data["behavioral_patterns"]
+        st.write("**Conversation Depth:**", behavioral["conversation_depth"])
+        
+        # Memory management buttons
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("Clear Memory"):
+                st.session_state.memory_manager.clear_memory()
+                st.rerun()
+        
+        with col2:
+            if st.button("Export Memory"):
+                memory_export = st.session_state.memory_manager.export_memory()
+                st.download_button(
+                    label="Download Memory",
+                    data=json.dumps(memory_export, indent=2),
+                    file_name=f"girlchat_memory_{time.strftime('%Y%m%d_%H%M%S')}.json",
+                    mime="application/json"
+                )
         
         st.markdown("---")
         
@@ -769,16 +844,21 @@ def main():
         st.session_state.messages.append({"role": "user", "content": user_input})
         
         # Check if this might be a name (first message and no name stored yet)
-        if not st.session_state.user_name and len(st.session_state.messages) <= 3:
+        memory_name = st.session_state.memory_manager.memory_data["user_profile"]["name"]
+        if not memory_name and len(st.session_state.messages) <= 3:
             # Simple name detection - if it's a short response and doesn't look like a question
             potential_name = user_input.strip()
             if len(potential_name) <= 20 and not any(word in potential_name.lower() for word in ['what', 'how', 'why', 'when', 'where', 'who', '?']):
-                st.session_state.user_name = potential_name
+                st.session_state.memory_manager.memory_data["user_profile"]["name"] = potential_name
+                st.session_state.memory_manager.save_memory()
         
         # Get AI response (with image if uploaded)
         ai_response = get_ai_response(st.session_state.messages, st.session_state.api_key, image_base64)
         
         if ai_response:
+            # Update memory with new conversation data
+            update_user_memory(user_input, ai_response)
+            
             # Add AI response to messages
             st.session_state.messages.append({"role": "assistant", "content": ai_response})
             
