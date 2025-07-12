@@ -874,11 +874,17 @@ def main():
     
     if 'send_message' not in st.session_state:
         st.session_state['send_message'] = False
+    if 'clear_input' not in st.session_state:
+        st.session_state['clear_input'] = False
+    if st.session_state['clear_input']:
+        st.session_state['user_input'] = ''
+        st.session_state['clear_input'] = False
 
     # Text input with on_change handler for Enter-to-send
     user_input = st.text_input(
         "Type your message...",
         key="user_input",
+        value=st.session_state.get('user_input', ''),
         placeholder="What's on your mind?",
         disabled=not st.session_state.api_key,
         on_change=handle_user_input
@@ -931,6 +937,7 @@ def main():
                 st.session_state.show_typing = True
             else:
                 st.error("Sorry, I had trouble connecting. Please check your API key and try again!")
+        st.session_state['clear_input'] = True
         st.session_state['user_input'] = ''
         st.session_state['image_base64'] = None
         st.session_state['send_message'] = False
