@@ -938,7 +938,6 @@ def main():
             else:
                 st.error("Sorry, I had trouble connecting. Please check your API key and try again!")
         st.session_state['clear_input'] = True
-        st.session_state['user_input'] = ''
         st.session_state['image_base64'] = None
         st.session_state['send_message'] = False
         st.experimental_rerun()
