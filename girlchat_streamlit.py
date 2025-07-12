@@ -924,6 +924,14 @@ def main():
         disabled=not st.session_state.api_key,
         on_change=handle_user_input
     )
+    # Send button for reliable submission
+    send_button = st.button(
+        "Send 💕",
+        disabled=not st.session_state.api_key or not st.session_state.get('user_input', '').strip(),
+        use_container_width=True
+    )
+    if send_button:
+        st.session_state['send_message'] = True
     # Auto-focus the input box after each rerun
     st.markdown("""
     <script>
