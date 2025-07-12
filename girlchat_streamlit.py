@@ -553,7 +553,7 @@ def append_to_history(role, content):
 
 def get_last_n_messages(n=3):
     if not os.path.exists(HISTORY_FILE):
-        return []
+        return [], []
     with open(HISTORY_FILE, "r", encoding="utf-8") as f:
         lines = f.readlines()
     # Parse lines into (role, content)
