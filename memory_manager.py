@@ -4,6 +4,7 @@ import time
 from datetime import datetime
 from typing import Dict, List, Optional
 import hashlib
+import re
 
 class MemoryManager:
     """Advanced memory management system for GirlChat"""
@@ -126,7 +127,6 @@ class MemoryManager:
                 r"call me (\w+)",
                 r"i am (\w+)"
             ]
-            import re
             for pattern in name_patterns:
                 match = re.search(pattern, text)
                 if match:
